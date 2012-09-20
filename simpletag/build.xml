@@ -1,0 +1,63 @@
+<project name="SimpleTag" default="dist" basedir=".">
+  <!-- set global properties for this build -->
+  <property environment="env"/>
+  <property name="top" value="."/>
+  <property name="src" value="."/>
+  <property name="build" value="build"/>
+  <property name="dist" value="dist"/>
+  <property name="war_dir" value="${dist}/lib"/>
+  <property name="war_file" value="${war_dir}/SimpleTag.war"/>
+
+  <property name="webinf" value="${top}/WEB-INF"/>
+  <property name="web.xml" value="${webinf}/web.xml"/>
+  <property name="classes" value="${webinf}/classes"/>
+  <property name="lib" value="${top}/WEB-INF/lib"/>
+  <property name="servlet.jar" value="${env.TOMCAT_HOME}/lib/servlet.jar"/>
+  <property name="deploy" value="${env.JBOSS_HOME}/deploy"/>
+
+  <target name="clean">
+    <!-- Delete our the ${build} and ${dist} directory tree -->
+    <delete dir="${build}"/>
+    <delete dir="${dist}"/>
+    <delete dir="${war_dir}"/>
+  </target>
+
+  <target name="init">
+    <!-- Create the build directory structure used by compile and dist -->
+    <mkdir dir="${build}"/>
+    <mkdir dir="${dist}"/>
+    <mkdir dir="${war_dir}"/>
+  </target>
+
+  <target name="compile" depends="init">
+    <!-- Compile the java code from ${src} into ${build} -->
+    <javac srcdir="${top}/${src}" destdir="${build}"
+      classpath="${servlet.jar}"/>
+  </target>
+
+  <target name="dist" depends="compile">
+    <!-- Put everything in a war file -->
+    <war warfile="${war_file}" webxml="${web.xml}">
+      <!-- include all JSPs in root level -->
+      <fileset dir="${top}/${src}">
+        <include name="*.jsp"/>
+      </fileset>
+
+      <!-- include all tag libraries in WEB-INF
+      but not web.xml (that's handled seperately) -->
+      <webinf dir="${webinf}">
+        <include name="*.tld"/>
+      </webinf>
+
+      <!-- include all compiled classes -->
+      <classes dir="${build}"/>
+    </war>
+  </target>
+
+  <target name="deploy">
+    <!-- Copy the war file to the JBOSS deploy directory -->
+    <copy file="${war_file}" todir="${deploy}"/>
+  </target>
+
+  <target name="all" depends="clean,dist,deploy"/>
+</project>
